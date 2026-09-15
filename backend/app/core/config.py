@@ -28,5 +28,8 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
     if not settings.SECRET_KEY:
-        settings.SECRET_KEY = "dev-secret-key-change-in-production"
+        if settings.DEBUG and os.getenv("ENVIRONMENT", "development") == "development":
+            settings.SECRET_KEY = "dev-secret-key-change-in-production"
+        else:
+            raise RuntimeError("SECRET_KEY must be set in production")
     return settings
