@@ -1,0 +1,111 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant API as FastAPI Backend
+    participant Orch as AIOrchestrator
+    participant Agent as Specialized Agent
+    participant LLM as LLM Provider
+    participant DB as PostgreSQL
+    participant WS as WebSocket Manager
+    participant FE as React Frontend
+
+    User->>API: POST /api/v1/projects/{id}/orchestrate/start
+    activate API
+    API->>Orch: AIOrchestrator(db, project_id)
+    API->>Orch: start_workflow()
+    activate Orch
+
+    Orch->>DB: UPDATE projects SET status='in_progress'
+    DB-->>Orch: OK
+
+    loop For each stage in WORKFLOW_STAGES
+        Note over Orch: Stage: requirements → research →<br/>product_analysis → architecture →<br/>database_design → ui_ux_design →<br/>implementation_plan → development →<br/>testing → security_review → documentation
+
+        Orch->>Orch: _execute_stage(stage_name, agent_role, description)
+        activate Orch
+
+        Orch->>Agent: get_or_create_agent(role)
+        activate Agent
+        Agent->>DB: SELECT agents WHERE role = :role
+        DB-->>Agent: Agent record or create new
+        Agent-->>Orch: Agent instance
+        deactivate Agent
+
+        Orch->>DB: SELECT project_stages WHERE project_id AND stage_name
+        DB-->>Orch: Stage record
+
+        alt Stage requires approval (architecture, development, security_review)
+            Orch->>DB: INSERT INTO approvals<br/>(project_id, action, reason,<br/>risk_level='medium', status='pending')
+            DB-->>Orch: Approval UUID
+
+            Orch->>DB: INSERT INTO tasks<br/>(project_id, agent_id, title, stage,<br/>status='pending_approval', requires_approval=true,<br/>approval_id)
+            DB-->>Orch: Task UUID
+
+            Orch->>DB: COMMIT
+            Orch->>WS: broadcast(project_id,<br/>{type: "approval_required",<br/>stage, approval_id})
+            WS->>FE: WebSocket message
+            FE-->>User: Show approval request card
+
+            Note over User: User reviews and decides
+
+            User->>API: POST /api/v1/projects/{id}/approvals/{id}/decide<br/>Body: {decision: "approved", decision_notes: "..."}
+            API->>DB: UPDATE approvals SET decision, status='decided', decided_at
+            DB-->>API: Updated
+
+            API-->>User: 200 ApprovalResponse
+        else Stage is auto-executed
+            Orch->>DB: INSERT INTO tasks<br/>(project_id, agent_id, title, stage,<br/>status='in_progress', started_at=now)
+            DB-->>Orch: Task UUID
+
+            Orch->>DB: INSERT INTO task_runs<br/>(task_id, agent_id, status='running',<br/>started_at=now)
+            DB-->>Orch: TaskRun UUID
+
+            Orch->>WS: broadcast(project_id,<br/>{type: "stage_started",<br/>stage: stage_name})
+            WS->>FE: WebSocket message
+            FE-->>User: Show stage in-progress indicator
+
+            Agent->>LLM: Generate stage output<br/>(prompt + project context)
+            activate LLM
+            LLM-->>Agent: AI-generated content
+            deactivate LLM
+
+            Agent-->>Orch: output dict
+
+            Orch->>DB: UPDATE tasks SET status='completed',<br/>output_data=:output, completed_at=now
+            Orch->>DB: UPDATE task_runs SET status='completed',<br/>output_data=:output, duration_ms=150
+            Orch->>DB: UPDATE project_stages SET status='completed',<br/>completed_at=now, output_data=:output
+
+            Orch->>Orch: _store_stage_output(stage_name, output)
+
+            alt Stage is requirements
+                Orch->>DB: INSERT INTO documents (requirements report)
+                Orch->>DB: INSERT INTO project_requirements (for each FR)
+            else Stage is architecture
+                Orch->>DB: INSERT INTO documents (architecture report)
+                Orch->>DB: INSERT INTO architecture_components
+            else Stage is research
+                Orch->>DB: INSERT INTO documents (research report)
+            else Stage is documentation
+                Orch->>DB: INSERT INTO documents (documentation report)
+            end
+        end
+
+        Orch->>DB: Calculate progress<br/>(completed_stages / total_stages * 100)
+        Orch->>DB: UPDATE projects SET progress=:pct, current_stage=:next
+        Orch->>DB: COMMIT
+
+        Orch->>WS: broadcast(project_id,<br/>{type: "stage_completed",<br/>stage, progress})
+        WS->>FE: WebSocket message
+        FE-->>User: Update dashboard progress bar
+
+        deactivate Orch
+    end
+
+    Orch->>DB: UPDATE projects SET status='completed'
+    Orch->>WS: broadcast(project_id,<br/>{type: "workflow_completed"})
+    WS->>FE: WebSocket message
+    FE-->>User: Show completion celebration
+    deactivate Orch
+    deactivate API

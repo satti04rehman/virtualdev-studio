@@ -1,0 +1,143 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+flowchart LR
+    subgraph Input ["User Input"]
+        ProjectIdea["Project Idea<br/>Name + Description"]
+        UserPrefs["User Preferences<br/>Platform + Tech Stack<br/>Complexity"]
+        AuthCreds["Credentials<br/>Email + Password"]
+        Approvals["Decisions<br/>Approve / Reject"]
+    end
+
+    subgraph Frontend ["React Frontend"]
+        FormValidation["Client-side<br/>Validation"]
+        APIClient["API Client<br/>api.ts"]
+        WSClient["WebSocket<br/>Client"]
+        LocalStorage["localStorage<br/>JWT Token"]
+    end
+
+    subgraph API ["FastAPI Backend"]
+        direction TB
+        CORSFilter["CORS<br/>Middleware"]
+        JWTMiddleware["JWT<br/>Middleware"]
+        RateLimiter["Rate<br/>Limiter"]
+
+        subgraph Routes ["API Routes"]
+            AuthRoute["/auth<br/>register, login"]
+            ProjectRoute["/projects<br/>CRUD + stages"]
+            EntityRoute["/entities<br/>requirements,<br/>research, tasks,<br/>approvals, docs"]
+            OrchestrateRoute["/orchestrate<br/>start, continue"]
+        end
+
+        subgraph Processing ["Business Logic"]
+            ProjectCreation["Project Creation<br/>14 stages initialized"]
+            StageExecution["Stage Execution<br/>Agent delegation"]
+            ApprovalProcessing["Approval<br/>Decision Processing"]
+            ProgressCalc["Progress<br/>Calculation"]
+        end
+    end
+
+    subgraph AI ["AI Orchestrator"]
+        StageManager["Stage Manager<br/>Sequential execution"]
+        AgentRouter["Agent Router<br/>Role-based delegation"]
+        OutputGenerator["Output Generator<br/>LLM responses"]
+        DocumentStore["Document<br/>Storage"]
+    end
+
+    subgraph DB ["PostgreSQL"]
+        direction TB
+        UserTable[("users<br/>Authentication data")]
+        ProjectTable[("projects<br/>Project metadata")]
+        StageTable[("project_stages<br/>14 workflow stages")]
+        RequirementTable[("project_requirements<br/>FR/NFR")]
+        ResearchTable[("research_items<br/>Findings")]
+        ArchTable[("architecture_components<br/>System design")]
+        AgentTable[("agents<br/>10 specialized roles")]
+        TaskTable[("tasks<br/>Execution records")]
+        TaskRunTable[("task_runs<br/>Run history")]
+        DocTable[("documents<br/>Generated content")]
+        DiagramTable[("diagrams<br/>Mermaid sources")]
+        ApprovalTable[("approvals<br/>Decision records")]
+        AuditTable[("audit_logs<br/>Activity trail")]
+    end
+
+    subgraph External ["External Services"]
+        LLM["LLM API<br/>GPT-4 / Claude"]
+    end
+
+    subgraph Output ["User-Facing Output"]
+        Dashboard["Dashboard<br/>Stats + Activity"]
+        StageResults["Stage Results<br/>Requirements, Research,<br/>Architecture"]
+        TaskLog["Task Execution Log<br/>Status + Duration"]
+        ApprovalUI["Approval Cards<br/>Decision UI"]
+        Documents["Generated Docs<br/>Markdown/JSON"]
+        Diagrams["Diagrams<br/>Mermaid renders"]
+        FinalReport["Final Report<br/>Complete package"]
+    end
+
+    subgraph Events ["Real-time Events"]
+        WSBroadcast["WebSocket<br/>Broadcast"]
+        StageUpdates["Stage Updates<br/>started/completed/failed"]
+        ApprovalNotifs["Approval<br/>Notifications"]
+        ProgressUpdates["Progress<br/>Updates"]
+    end
+
+    ProjectIdea --> FormValidation
+    UserPrefs --> FormValidation
+    AuthCreds --> APIClient
+    Approvals --> APIClient
+
+    FormValidation -->|"HTTP POST"| APIClient
+    APIClient -->|"Bearer JWT"| CORSFilter
+    CORSFilter --> JWTMiddleware
+    JWTMiddleware --> Routes
+
+    AuthRoute --> UserTable
+    ProjectRoute --> ProjectCreation
+    ProjectCreation -->|"INSERT 14 stages"| StageTable
+    ProjectCreation -->|"INSERT project"| ProjectTable
+
+    OrchestrateRoute --> StageManager
+    StageManager --> AgentRouter
+    AgentRouter --> OutputGenerator
+    OutputGenerator -->|"Prompt + Context"| LLM
+    LLM -->|"Generated content"| OutputGenerator
+    OutputGenerator -->|"Persist"| DB
+    OutputGenerator --> DocumentStore
+
+    EntityRoute --> ApprovalProcessing
+    ApprovalProcessing -->|"UPDATE decision"| ApprovalTable
+
+    StageExecution --> ProgressCalc
+    ProgressCalc -->|"UPDATE progress"| ProjectTable
+
+    DB -->|"Query results"| EntityRoute
+    DB -->|"Query results"| ProjectRoute
+
+    StageManager --> WSBroadcast
+    WSBroadcast --> StageUpdates
+    WSBroadcast --> ApprovalNotifs
+    WSBroadcast --> ProgressUpdates
+
+    StageUpdates --> WSClient
+    ApprovalNotifs --> WSClient
+    ProgressUpdates --> WSClient
+
+    WSClient --> Dashboard
+    EntityRoute --> StageResults
+    EntityRoute --> TaskLog
+    EntityRoute --> ApprovalUI
+    EntityRoute --> Documents
+    EntityRoute --> Diagrams
+
+    StageResults --> FinalReport
+    Documents --> FinalReport
+    Diagrams --> FinalReport
+
+    style Input fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px
+    style Frontend fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px
+    style API fill:#F5F3FF,stroke:#8B5CF6,stroke-width:2px
+    style AI fill:#FCE7F3,stroke:#EC4899,stroke-width:2px
+    style DB fill:#ECFDF5,stroke:#10B981,stroke-width:2px
+    style External fill:#FEF2F2,stroke:#EF4444,stroke-width:2px
+    style Output fill:#F0F9FF,stroke:#0EA5E9,stroke-width:2px
+    style Events fill:#FFF7ED,stroke:#F97316,stroke-width:2px

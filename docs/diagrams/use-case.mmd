@@ -1,0 +1,81 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5', 'primaryTextColor': '#fff'}}}%%
+
+graph LR
+    User["<b>User</b><br/>"]
+    Orchestrator["<b>AI Orchestrator</b><br/>"]
+    Agents["<b>Specialized Agents</b><br/>10 Agent Roles"]
+
+    subgraph ProjectManagement ["Project Management"]
+        UC1["<b>Create Project</b><br/>Define idea, target users,<br/>platform, tech stack"]
+        UC2["<b>Manage Project</b><br/>Edit details, view status,<br/>track progress"]
+        UC3["<b>View Progress</b><br/>Dashboard metrics,<br/>stage completion, timeline"]
+    end
+
+    subgraph Workflow ["Workflow Execution"]
+        UC4["<b>Start Workflow</b><br/>Initiate AI-driven<br/>development pipeline"]
+        UC5["<b>Run Stage</b><br/>Execute specific stage<br/>with assigned agent"]
+        UC6["<b>Retry Failed Stage</b><br/>Re-execute a stage<br/>that encountered errors"]
+    end
+
+    subgraph Approval ["Human-in-the-Loop"]
+        UC7["<b>Review Approvals</b><br/>Examine pending decisions<br/>with risk assessment"]
+        UC8["<b>Approve Decision</b><br/>Authorize architecture,<br/>development, security"]
+        UC9["<b>Reject Decision</b><br/>Request changes with<br/>notes and feedback"]
+    end
+
+    subgraph AI ["Agent Operations"]
+        UC10["<b>Analyze Requirements</b><br/>Break down idea into<br/>FR/NFR/User Stories"]
+        UC11["<b>Research Market</b><br/>Competitors, tech stack,<br/>market analysis"]
+        UC12["<b>Design Architecture</b><br/>System components,<br/>API surface, deployment"]
+        UC13["<b>Generate Code</b><br/>Backend + Frontend<br/>implementation"]
+        UC14["<b>Run Tests</b><br/>API, component, and<br/>integration testing"]
+        UC15["<b>Security Review</b><br/>Vulnerability scan,<br/>auth audit, best practices"]
+    end
+
+    subgraph Outputs ["Deliverables"]
+        UC16["<b>View Documents</b><br/>Requirements, research,<br/>architecture docs"]
+        UC17["<b>View Diagrams</b><br/>ERD, architecture,<br/>sequence diagrams"]
+        UC18["<b>Export Final Report</b><br/>Complete project package<br/>with all artifacts"]
+    end
+
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    User --> UC4
+    User --> UC7
+    User --> UC8
+    User --> UC9
+    User --> UC16
+    User --> UC17
+    User --> UC18
+
+    Orchestrator --> UC5
+    Orchestrator --> UC6
+    Orchestrator --> UC10
+    Orchestrator --> UC11
+    Orchestrator --> UC12
+    Orchestrator --> UC13
+    Orchestrator --> UC14
+    Orchestrator --> UC15
+
+    Agents --> UC10
+    Agents --> UC11
+    Agents --> UC12
+    Agents --> UC13
+    Agents --> UC14
+    Agents --> UC15
+
+    UC4 ..> UC5 : triggers
+    UC8 ..> UC5 : unblocks
+    UC9 ..> UC6 : triggers
+    UC5 ..> UC16 : produces
+    UC5 ..> UC17 : produces
+    UC18 ..> UC16 : aggregates
+    UC18 ..> UC17 : aggregates
+
+    classDef actor fill:#4F46E5,stroke:#3730A3,color:#fff,stroke-width:2px
+    classDef usecase fill:#E0E7FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1px
+    classDef subgraphStyle fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1px
+
+    class User,Orchestrator,Agents actor
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8,UC9,UC10,UC11,UC12,UC13,UC14,UC15,UC16,UC17,UC18 usecase

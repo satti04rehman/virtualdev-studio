@@ -1,0 +1,60 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5', 'primaryTextColor': '#fff', 'primaryBorderColor': '#3730A3', 'lineColor': '#6366F1', 'secondaryColor': '#F0ABFC', 'tertiaryColor': '#E0E7FF'}}}%%
+
+graph TB
+    User["<b>User</b><br/>Software Developer /<br/>Product Manager"]
+
+    subgraph Systems ["VirtualDev Studio Systems"]
+        WebApp["<b>Web Application</b><br/>React + TypeScript<br/>Single Page Application"]
+        MobileApp["<b>Mobile Companion</b><br/>Flutter App<br/>Project Monitoring"]
+        APIGateway["<b>FastAPI Backend</b><br/>REST API + WebSocket<br/>JWT Authentication"]
+        AIOrchestrator["<b>AI Orchestrator</b><br/>10 Specialized Agents<br/>Workflow Engine"]
+        Database[("<b>PostgreSQL</b><br/>Async Sessions<br/>JSONB Storage")]
+    end
+
+    subgraph External ["External Services"]
+        LLMProviders["<b>LLM Providers</b><br/>OpenAI GPT-4 /<br/>Anthropic Claude / Mock"]
+        Embeddings["<b>Embedding Service</b><br/>Vector Generation"]
+    end
+
+    subgraph Clients ["Client Devices"]
+        Browser["<b>Web Browser</b><br/>Chrome / Firefox / Safari"]
+        Phone["<b>Mobile Device</b><br/>Android / iOS"]
+    end
+
+    Browser -->|"HTTPS / WSS"| WebApp
+    Phone -->|"HTTPS / WSS"| MobileApp
+
+    User -->|"Interacts via"| Browser
+    User -->|"Monitors via"| Phone
+
+    WebApp -->|"REST API + JWT"| APIGateway
+    WebApp -->|"WebSocket<br/>Real-time Updates"| APIGateway
+    MobileApp -->|"REST API + JWT"| APIGateway
+    MobileApp -->|"WebSocket<br/>Real-time Updates"| APIGateway
+
+    APIGateway -->|"Async Queries"| Database
+    APIGateway -->|"Triggers Workflows"| AIOrchestrator
+
+    AIOrchestrator -->|"Delegates Tasks"| APIGateway
+    AIOrchestrator -->|"Persists Results"| Database
+    AIOrchestrator -->|"Prompt + Context"| LLMProviders
+    AIOrchestrator -->|"Generates Embeddings"| Embeddings
+
+    LLMProviders -->|"Response"| AIOrchestrator
+    Embeddings -->|"Vectors"| AIOrchestrator
+
+    APIGateway -->|"Broadcasts via WS"| WebApp
+    APIGateway -->|"Broadcasts via WS"| MobileApp
+
+    classDef actor fill:#4F46E5,stroke:#3730A3,color:#fff,stroke-width:2px
+    classDef system fill:#7C3AED,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef external fill:#DC2626,stroke:#991B1B,color:#fff,stroke-width:2px
+    classDef database fill:#059669,stroke:#047857,color:#fff,stroke-width:2px
+    classDef client fill:#F59E0B,stroke:#D97706,color:#000,stroke-width:2px
+
+    class User actor
+    class WebApp,MobileApp,AIOrchestrator system
+    class APIGateway system
+    class LLMProviders,Embeddings external
+    class Database database
+    class Browser,Phone client

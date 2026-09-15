@@ -1,0 +1,70 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+flowchart TD
+    Start(("Start")) --> A["User Creates Project<br/>Name, Description, Platform,<br/>Tech Stack, Complexity"]
+    A --> B["System Creates 14<br/>Pending Stage Records"]
+    B --> C["User Starts<br/>AI Workflow"]
+    C --> D["Orchestrator Sets<br/>status = in_progress"]
+
+    D --> E{"<b>1. Requirements</b><br/>Requirements Analyst Agent"}
+    E --> E1["Analyze Idea → Generate FR/NFR<br/>User Stories, Edge Cases"]
+    E1 --> E2["Store Requirements Document<br/>+ Individual Requirements"]
+    E2 --> F{"<b>2. Research</b><br/>Researcher Agent"}
+    F --> F1["Market Analysis,<br/>Competitor Research,<br/>Tech Landscape"]
+    F1 --> F2["Store Research Document<br/>+ Research Items"]
+    F2 --> G{"<b>3. Product Analysis</b><br/>Product Strategist Agent"}
+    G --> G1["Define MVP Scope,<br/>Target Market,<br/>Value Proposition"]
+    G1 --> H{"<b>4. Architecture</b><br/>Architect Agent"}
+
+    H -->|"⚠️ Approval Required"| H_Approval["Create Approval Request<br/>Risk: Medium"]
+    H_Approval --> H_Wait{"User Reviews<br/>Architecture Design?"}
+    H_Wait -->|"✅ Approved"| H_Design["Design System Components<br/>API Surface, Deployment"]
+    H_Wait -->|"❌ Rejected"| H_Revise["Return to Research Stage<br/>with User Notes"]
+    H_Revise --> F
+
+    H_Design --> H_Store["Store Architecture Document<br/>+ Components"]
+    H_Store --> I{"<b>5. Database Design</b><br/>Database Engineer Agent"}
+    I --> I1["Design Schema,<br/>Indexes, Relationships,<br/>Constraints"]
+    I1 --> J{"<b>6. UI/UX Design</b><br/>UI/UX Designer Agent"}
+    J --> J1["Define Pages, Components,<br/>Layouts, Design System"]
+    J1 --> K{"<b>7. Implementation Plan</b><br/>Architect Agent"}
+    K --> K1["Define Phases,<br/>Task Breakdown,<br/>Dependencies"]
+
+    K1 --> L{"<b>8. Development</b><br/>Developer Agent"}
+
+    L -->|"⚠️ Approval Required"| L_Approval["Create Approval Request<br/>Risk: Medium"]
+    L_Approval --> L_Wait{"User Reviews<br/>Code Plan?"}
+    L_Wait -->|"✅ Approved"| L_Code["Generate Backend + Frontend<br/>API Endpoints, Components"]
+    L_Wait -->|"❌ Rejected"| L_Revise["Return to Implementation Plan<br/>with User Notes"]
+    L_Revise --> K
+
+    L_Code --> M{"<b>9. Testing</b><br/>Testing Engineer Agent"}
+    M --> M1["Create Test Suites<br/>Run API Tests,<br/>Component Tests"]
+    M1 --> M2["Report Coverage:<br/>Pass/Fail Counts"]
+
+    M2 --> N{"<b>10. Security Review</b><br/>Security Reviewer Agent"}
+
+    N -->|"⚠️ Approval Required"| N_Approval["Create Approval Request<br/>Risk: Medium"]
+    N_Approval --> N_Wait{"User Reviews<br/>Security Findings?"}
+    N_Wait -->|"✅ Approved"| N_Review["Audit Auth, Vulnerabilities,<br/>Best Practices"]
+    N_Wait -->|"❌ Rejected"| N_Revise["Return to Development<br/>with Security Notes"]
+    N_Revise --> L
+
+    N_Review --> O{"<b>11. Documentation</b><br/>Documentation Engineer Agent"}
+    O --> O1["Generate README,<br/>API Docs, User Guide,<br/>Architecture Guide"]
+
+    O1 --> P["Workflow Complete<br/>status = completed"]
+    P --> Q["Generate Final Report<br/>All Documents + Diagrams<br/>+ Presentation"]
+    Q --> End(("End"))
+
+    style Start fill:#10B981,stroke:#047857,color:#fff
+    style End fill:#10B981,stroke:#047857,color:#fff
+    style H_Approval fill:#F59E0B,stroke:#D97706,color:#000
+    style H_Wait fill:#F59E0B,stroke:#D97706,color:#000
+    style L_Approval fill:#F59E0B,stroke:#D97706,color:#000
+    style L_Wait fill:#F59E0B,stroke:#D97706,color:#000
+    style N_Approval fill:#F59E0B,stroke:#D97706,color:#000
+    style N_Wait fill:#F59E0B,stroke:#D97706,color:#000
+    style H_Revise fill:#EF4444,stroke:#B91C1C,color:#fff
+    style L_Revise fill:#EF4444,stroke:#B91C1C,color:#fff
+    style N_Revise fill:#EF4444,stroke:#B91C1C,color:#fff

@@ -1,0 +1,92 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+graph TB
+    subgraph ClientLayer ["Client Layer"]
+        direction LR
+        WebClient["<b>React SPA</b><br/>Vite + TypeScript<br/>React Router v6<br/>TailwindCSS"]
+        MobileClient["<b>Flutter App</b><br/>Dart / Material Design<br/>Project Monitoring"]
+    end
+
+    subgraph APIGatewayLayer ["API Gateway Layer"]
+        direction LR
+        FastAPI["<b>FastAPI Server</b><br/>Python 3.11+<br/>Async / Await<br/>CORS Middleware"]
+        WebSocket["<b>WebSocket Manager</b><br/>ConnectionManager<br/>Project-scoped Rooms<br/>Broadcast Events"]
+        JWTAuth["<b>JWT Authentication</b><br/>HS256 Signing<br/>Access + Refresh Tokens<br/>Bearer HTTP Scheme"]
+    end
+
+    subgraph APILayer ["REST API Layer"]
+        direction LR
+        AuthRoutes["<b>/auth</b><br/>POST /register<br/>POST /login"]
+        ProjectRoutes["<b>/projects</b><br/>CRUD Operations<br/>Stage Management"]
+        EntityRoutes["<b>/entities</b><br/>Requirements, Research<br/>Architecture, Tasks"]
+        OrchestrateRoutes["<b>/orchestrate</b><br/>POST /start<br/>POST /continue"]
+    end
+
+    subgraph AILayer ["AI Orchestrator Layer"]
+        direction LR
+        OrchestratorCore["<b>AIOrchestrator</b><br/>Workflow Engine<br/>Stage Execution<br/>Progress Tracking"]
+        AgentPool["<b>Agent Pool</b><br/>Requirements Analyst<br/>Researcher<br/>Product Strategist<br/>Architect<br/>Database Engineer<br/>UI/UX Designer<br/>Developer<br/>Testing Engineer<br/>Security Reviewer<br/>Documentation Engineer"]
+        TaskManager["<b>Task Manager</b><br/>Task Creation<br/>TaskRun Lifecycle<br/>Approval Gating"]
+    end
+
+    subgraph DataLayer ["Data Layer"]
+        direction LR
+        SQLAlchemy["<b>SQLAlchemy ORM</b><br/>Async Sessions<br/>Declarative Models<br/>Relationships"]
+        PostgreSQL[("<b>PostgreSQL 16</b><br/>UUID Primary Keys<br/>JSONB Columns<br/>14 FK Relationships")]
+        Redis["<b>Redis Cache</b><br/>Session Store<br/>Token Blacklist"]
+    end
+
+    subgraph ExternalServices ["External Services"]
+        direction LR
+        OpenAI["<b>OpenAI API</b><br/>GPT-4 Model"]
+        Anthropic["<b>Anthropic API</b><br/>Claude Model"]
+        MockLLM["<b>Mock LLM</b><br/>Dev / Testing"]
+    end
+
+    subgraph Infrastructure ["Infrastructure"]
+        direction LR
+        Docker["<b>Docker Compose</b><br/>Multi-container"]
+        Nginx["<b>Nginx</b><br/>Reverse Proxy<br/>SSL Termination"]
+    end
+
+    WebClient -->|"REST + WS"| FastAPI
+    MobileClient -->|"REST + WS"| FastAPI
+
+    FastAPI --> JWTAuth
+    FastAPI --> WebSocket
+    FastAPI --> AuthRoutes
+    FastAPI --> ProjectRoutes
+    FastAPI --> EntityRoutes
+    FastAPI --> OrchestrateRoutes
+
+    OrchestrateRoutes --> OrchestratorCore
+    OrchestratorCore --> AgentPool
+    OrchestratorCore --> TaskManager
+    AgentPool -->|"Generate Output"| ExternalServices
+
+    AuthRoutes --> SQLAlchemy
+    ProjectRoutes --> SQLAlchemy
+    EntityRoutes --> SQLAlchemy
+    TaskManager --> SQLAlchemy
+    OrchestratorCore --> SQLAlchemy
+
+    SQLAlchemy --> PostgreSQL
+    SQLAlchemy -.->|"Optional"| Redis
+
+    Docker --> FastAPI
+    Docker --> PostgreSQL
+    Nginx -.->|"Routes to"| FastAPI
+
+    classDef client fill:#3B82F6,stroke:#1D4ED8,color:#fff,stroke-width:2px
+    classDef api fill:#8B5CF6,stroke:#6D28D9,color:#fff,stroke-width:2px
+    classDef ai fill:#EC4899,stroke:#BE185D,color:#fff,stroke-width:2px
+    classDef data fill:#10B981,stroke:#047857,color:#fff,stroke-width:2px
+    classDef external fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+    classDef infra fill:#F59E0B,stroke:#D97706,color:#000,stroke-width:2px
+
+    class WebClient,MobileClient client
+    class FastAPI,WebSocket,JWTAuth,AuthRoutes,ProjectRoutes,EntityRoutes,OrchestrateRoutes api
+    class OrchestratorCore,AgentPool,TaskManager ai
+    class SQLAlchemy,PostgreSQL,Redis data
+    class OpenAI,Anthropic,MockLLM external
+    class Docker,Nginx infra

@@ -1,0 +1,81 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+flowchart TD
+    Start(("Landing Page"))
+
+    Start -->|"Explore"| Landing["LandingPage<br/>Features, Benefits, CTA"]
+    Landing -->|"Sign Up"| Register["RegisterPage<br/>Email + Password + Name"]
+    Landing -->|"Already have account"| Login["LoginPage<br/>Email + Password"]
+
+    Register -->|"POST /auth/register"| AuthCheck1{"Account<br/>Created?"}
+    AuthCheck1 -->|"✅ Success"| Dashboard
+    AuthCheck1 -->|"❌ Error"| Register
+
+    Login -->|"POST /auth/login"| AuthCheck2{"Authenticated?"}
+    AuthCheck2 -->|"✅ JWT received"| Dashboard
+    AuthCheck2 -->|"❌ Invalid credentials"| Login
+
+    subgraph Authenticated ["Authenticated Experience"]
+        Dashboard["DashboardPage<br/>📊 Project Stats<br/>📋 Recent Activity<br/>➕ New Project Button"]
+
+        Dashboard -->|"Create New"| CreateProject["CreateProjectPage<br/>Step 1: Name & Description<br/>Step 2: Target Users & Platform<br/>Step 3: Tech Stack & Complexity"]
+
+        CreateProject -->|"POST /projects"| ProjectCreated{"Project<br/>Created?"}
+        ProjectCreated -->|"✅ Success"| Workspace
+        ProjectCreated -->|"❌ Validation Error"| CreateProject
+
+        Dashboard -->|"Select Project"| Workspace
+
+        Workspace["ProjectWorkspacePage<br/>📈 Progress Bar<br/>📋 Stage Timeline<br/>🚀 Start / Continue Button"]
+
+        Workspace -->|"Start AI Workflow"| WorkflowStarted{"Workflow<br/>Started?"}
+        WorkflowStarted -->|"✅ Running"| LiveUpdates["Live WebSocket Updates<br/>Real-time stage progress"]
+        WorkflowStarted -->|"❌ Error"| Workspace
+
+        LiveUpdates --> Workspace
+
+        subgraph StageTabs ["Project Stage Navigation"]
+            direction LR
+            ReqTab["📋 Requirements<br/>FR + NFR + User Stories"]
+            ResTab["🔍 Research<br/>Market + Competitors"]
+            ArchTab["🏗️ Architecture<br/>Components + API"]
+            TasksTab["⚙️ Tasks<br/>Execution Log"]
+            TestTab["🧪 Testing<br/>Test Results + Coverage"]
+            DocTab["📄 Documentation<br/>Generated Docs"]
+        end
+
+        Workspace --> ReqTab
+        Workspace --> ResTab
+        Workspace --> ArchTab
+        Workspace --> TasksTab
+        Workspace --> TestTab
+        Workspace --> DocTab
+
+        subgraph ApprovalFlow ["Approval Decision Points"]
+            ApprovalsTab["🔔 Approvals<br/>Pending Decisions"]
+            ApprovalsTab --> Review["Review Decision<br/>Action, Reason, Risk Level"]
+            Review --> Decide{"Approve<br/>or Reject?"}
+            Decide -->|"✅ Approve"| ApproveAction["POST /approvals/:id/decide<br/>decision: approved"]
+            Decide -->|"❌ Reject"| RejectAction["POST /approvals/:id/decide<br/>decision: rejected + notes"]
+            ApproveAction -->|"Workflow continues"| Workspace
+            RejectAction -->|"Stage revised"| Workspace
+        end
+
+        Workspace --> ApprovalsTab
+
+        subgraph AITeam ["AI Team View"]
+            AITeamPage["AITeamPage<br/>10 Agent Roles<br/>Status & Capabilities"]
+        end
+
+        Dashboard --> AITeamPage
+
+        FinalProject["FinalProjectPage<br/>📊 Complete Report<br/>📁 All Documents<br/>📐 Diagrams<br/>📊 Metrics Summary"]
+
+        Workspace -->|"Workflow Complete"| FinalProject
+    end
+
+    style Start fill:#10B981,stroke:#047857,color:#fff
+    style Authenticated fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px
+    style StageTabs fill:#F5F3FF,stroke:#8B5CF6
+    style ApprovalFlow fill:#FEF3C7,stroke:#F59E0B
+    style AITeam fill:#ECFDF5,stroke:#10B981

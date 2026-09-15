@@ -1,0 +1,120 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+graph TB
+    subgraph Frontend ["React Frontend — SPA"]
+        direction TB
+
+        subgraph Pages ["Pages (React Router v6)"]
+            LandingPage["LandingPage<br/>Public marketing page"]
+            LoginPage["LoginPage<br/>Email + Password"]
+            RegisterPage["RegisterPage<br/>User registration"]
+            DashboardPage["DashboardPage<br/>Project overview & stats"]
+            CreateProjectPage["CreateProjectPage<br/>Multi-step project form"]
+            ProjectWorkspacePage["ProjectWorkspacePage<br/>Stage tabs & progress"]
+            AITeamPage["AITeamPage<br/>Agent roster & status"]
+            RequirementsPage["RequirementsPage<br/>FR/NFR display"]
+            ResearchPage["ResearchPage<br/>Research findings"]
+            ArchitecturePage["ArchitecturePage<br/>System components"]
+            TaskExecutionPage["TaskExecutionPage<br/>Task list & runs"]
+            TestingPage["TestingPage<br/>Test results"]
+            DocumentationPage["DocumentationPage<br/>Generated docs"]
+            ApprovalsPage["ApprovalsPage<br/>Decision cards"]
+            FinalProjectPage["FinalProjectPage<br/>Complete deliverables"]
+        end
+
+        subgraph Components ["Shared Components"]
+            Layout["Layout<br/>Sidebar + Header shell"]
+            Sidebar["Sidebar<br/>Navigation menu"]
+            Header["Header<br/>User info + actions"]
+            StatusBadge["StatusBadge<br/>Color-coded labels"]
+            LoadingSpinner["LoadingSpinner<br/>Async indicator"]
+            EmptyState["EmptyState<br/>No data fallback"]
+            ApprovalCard["ApprovalCard<br/>Decision UI"]
+        end
+
+        subgraph Services ["Services & Hooks"]
+            ApiService["api.ts<br/>REST client with JWT"]
+            useApiHook["useApi.ts<br/>React hook for API"]
+            WebSocketClient["WebSocket Client<br/>ws://project_id"]
+        end
+
+        subgraph Types ["TypeScript Types"]
+            TypeDefs["types/index.ts<br/>User, Project, Task,<br/>Agent, Approval, etc."]
+        end
+    end
+
+    subgraph Backend ["FastAPI Backend — Python"]
+        direction TB
+
+        subgraph APIRoutes ["API Routes (/api/v1)"]
+            AuthRouter["/auth<br/>POST /register<br/>POST /login"]
+            ProjectRouter["/projects<br/>GET, POST, PATCH<br/>GET /stages"]
+            EntityRouter["/projects/:id/<br/>requirements, research,<br/>architecture, tasks,<br/>approvals, documents,<br/>diagrams, agents"]
+            OrchestrateRouter["/projects/:id/orchestrate<br/>POST /start<br/>POST /continue"]
+            WSRouter["/ws/projects/:id<br/>WebSocket endpoint"]
+        end
+
+        subgraph Core ["Core Module"]
+            Config["config.py<br/>Pydantic Settings<br/>Env variables"]
+            Database["database.py<br/>AsyncSession<br/>Engine + SessionLocal"]
+            Security["security.py<br/>JWT HS256<br/>BCrypt passwords<br/>get_current_user"]
+        end
+
+        subgraph Models ["ORM Models"]
+            UserModel["User<br/>users table"]
+            ProjectModels["Project, ProjectStage,<br/>ProjectRequirement,<br/>ResearchItem,<br/>ArchitectureComponent"]
+            TaskModels["Agent, Task,<br/>TaskRun"]
+            OutputModels["Document, Diagram,<br/>Presentation"]
+            ApprovalModel["Approval, AuditLog"]
+        end
+
+        subgraph Schemas ["Pydantic Schemas"]
+            UserSchemas["UserCreate, UserLogin,<br/>UserResponse,<br/>TokenResponse"]
+            ProjectSchemas["ProjectCreate,<br/>ProjectUpdate,<br/>ProjectResponse"]
+            EntitySchemas["RequirementResponse,<br/>TaskResponse,<br/>ApprovalDecision,<br/>..."]
+        end
+
+        subgraph AIOrchestrator ["AI Orchestrator"]
+            OrchCore["AIOrchestrator<br/>Workflow execution<br/>Stage management"]
+            OrchModels["AgentRole enum<br/>TaskStatus enum<br/>StageStatus enum<br/>WORKFLOW_STAGES"]
+            WebSocketMgr["ConnectionManager<br/>Project-scoped rooms<br/>Broadcast events"]
+        end
+    end
+
+    subgraph ExternalLayer ["External Services"]
+        LLM["LLM Provider<br/>OpenAI / Anthropic / Mock"]
+        PostgreSQL[("PostgreSQL<br/>Database")]
+    end
+
+    ApiService -->|"HTTP + JWT"| AuthRouter
+    ApiService -->|"HTTP + JWT"| ProjectRouter
+    ApiService -->|"HTTP + JWT"| EntityRouter
+    ApiService -->|"HTTP + JWT"| OrchestrateRouter
+    WebSocketClient -->|"WS connect"| WSRouter
+
+    AuthRouter --> Security
+    AuthRouter --> UserModel
+    ProjectRouter --> ProjectModels
+    EntityRouter --> ProjectModels
+    EntityRouter --> TaskModels
+    EntityRouter --> OutputModels
+    EntityRouter --> ApprovalModel
+    OrchestrateRouter --> OrchCore
+
+    Security --> Database
+    ProjectModels --> Database
+    TaskModels --> Database
+    OutputModels --> Database
+    ApprovalModel --> Database
+
+    OrchCore --> OrchModels
+    OrchCore --> TaskModels
+    OrchCore --> OutputModels
+    OrchCore --> WebSocketMgr
+    OrchCore -->|"API calls"| LLM
+
+    Database --> PostgreSQL
+
+    style Frontend fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px
+    style Backend fill:#F5F3FF,stroke:#8B5CF6,stroke-width:2px
+    style ExternalLayer fill:#FEF2F2,stroke:#EF4444,stroke-width:2px

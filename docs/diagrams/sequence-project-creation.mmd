@@ -1,0 +1,69 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as React Frontend
+    participant API as FastAPI Backend
+    participant Auth as JWT Auth Middleware
+    participant DB as PostgreSQL
+
+    User->>FE: Navigate to /projects/new
+    activate FE
+
+    User->>FE: Fill project form<br/>(name, description, platform,<br/>tech stack, complexity)
+    FE->>FE: Validate form inputs client-side
+
+    FE->>API: POST /api/v1/projects<br/>Authorization: Bearer {access_token}<br/>Body: {name, description, target_users,<br/>platform, preferred_tech, constraints, complexity}
+    activate API
+
+    API->>Auth: get_current_user(credentials)
+    activate Auth
+    Auth->>Auth: Decode JWT token<br/>Verify HS256 signature<br/>Extract user_id from "sub" claim
+    Auth->>DB: SELECT user WHERE id = :user_id AND is_active = true
+    activate DB
+    DB-->>Auth: User record
+    deactivate DB
+    Auth-->>API: User object
+    deactivate Auth
+
+    API->>API: Validate request body<br/>ProjectCreate schema validation
+
+    API->>DB: INSERT INTO projects<br/>(owner_id, name, description, target_users,<br/>platform, preferred_tech, constraints,<br/>complexity, status='created',<br/>current_stage='requirements', progress=0)
+    activate DB
+    DB-->>API: Project UUID
+    deactivate DB
+
+    loop For each of 14 workflow stages
+        API->>DB: INSERT INTO project_stages<br/>(project_id, stage_name, status='pending')
+        activate DB
+        DB-->>API: Stage UUID
+        deactivate DB
+    end
+
+    API->>DB: COMMIT TRANSACTION
+    activate DB
+    DB-->>API: Commit success
+    deactivate DB
+
+    API->>API: Refresh project with relationships
+    API-->>FE: 201 Created<br/>ProjectResponse {id, name, status,<br/>current_stage, progress, ...}
+    deactivate API
+
+    FE->>FE: Store project data in state
+    FE-->>User: Display project created confirmation<br/>Show project workspace
+    deactivate FE
+
+    Note over User,DB: Project created with 14 pending stages<br/>Ready for AI orchestration to begin
+
+    User->>FE: Click "Start AI Workflow"
+    activate FE
+    FE->>API: POST /api/v1/projects/{id}/orchestrate/start
+    activate API
+    API->>API: AIOrchestrator(db, project_id)
+    API->>API: orchestrator.start_workflow()
+    API->>DB: UPDATE projects SET status='in_progress'
+    API-->>FE: 200 {status: "started"}
+    deactivate API
+    FE-->>User: Redirect to project workspace<br/>WebSocket connected for live updates
+    deactivate FE

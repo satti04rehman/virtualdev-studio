@@ -1,0 +1,195 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+erDiagram
+    users ||--o{ projects : owns
+    users ||--o{ audit_logs : generates
+    projects ||--o{ project_stages : has
+    projects ||--o{ project_requirements : has
+    projects ||--o{ research_items : has
+    projects ||--o{ architecture_components : has
+    projects ||--o{ tasks : has
+    projects ||--o{ documents : produces
+    projects ||--o{ diagrams : produces
+    projects ||--o{ presentations : produces
+    projects ||--o{ approvals : requests
+    projects ||--o{ audit_logs : tracks
+    agents ||--o{ tasks : assigned_to
+    agents ||--o{ task_runs : executes
+    tasks ||--o{ task_runs : has
+    tasks ||--o| approvals : may_require
+    approvals }o--|| projects : belongs_to
+
+    users {
+        uuid id PK
+        varchar email UK "unique, indexed"
+        varchar full_name "not null"
+        varchar hashed_password "bcrypt hash"
+        varchar role "default: user"
+        boolean is_active "default: true"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    projects {
+        uuid id PK
+        uuid owner_id FK "references users.id"
+        varchar name "not null, max 255"
+        text description "project idea"
+        text target_users "target audience"
+        varchar platform "web/mobile/desktop"
+        jsonb preferred_tech "tech stack array"
+        text constraints "limitations"
+        varchar complexity "simple/moderate/complex/enterprise"
+        varchar status "created/in_progress/completed/failed"
+        varchar current_stage "active workflow stage"
+        integer progress "0-100 percentage"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    project_stages {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar stage_name "11 workflow stages"
+        varchar status "pending/in_progress/completed/failed/waiting_approval"
+        timestamptz started_at
+        timestamptz completed_at
+        jsonb output_data "stage-specific output"
+        text error_message "failure details"
+    }
+
+    project_requirements {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar type "functional/non_functional"
+        varchar title "requirement name"
+        text description "detailed description"
+        varchar priority "P0/P1/P2"
+        varchar status "draft/approved"
+        jsonb acceptance_criteria "definition of done"
+        timestamptz created_at
+    }
+
+    research_items {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar category "competitor/market/tech"
+        varchar title "research topic"
+        text content "findings"
+        varchar source "reference URL"
+        varchar source_type "fact/inference/proposal"
+        timestamptz created_at
+    }
+
+    architecture_components {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar name "component name"
+        varchar type "frontend/backend/database/service/ai_agent"
+        text description "purpose"
+        varchar technology "tech stack"
+        jsonb dependencies "dependent components"
+        jsonb configuration "setup details"
+        timestamptz created_at
+    }
+
+    agents {
+        uuid id PK
+        varchar name "agent display name"
+        varchar role "unique role identifier"
+        text description "capabilities"
+        jsonb capabilities "skill set"
+        boolean is_active "default: true"
+        timestamptz created_at
+    }
+
+    tasks {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        uuid agent_id FK "references agents.id"
+        varchar title "task description"
+        text description "detailed info"
+        varchar stage "workflow stage"
+        varchar status "queued/in_progress/completed/failed/pending_approval/cancelled"
+        integer priority "execution order"
+        jsonb input_data "stage input"
+        jsonb output_data "stage output"
+        text error_message "failure details"
+        boolean requires_approval "human gate flag"
+        uuid approval_id FK "references approvals.id"
+        timestamptz created_at
+        timestamptz started_at
+        timestamptz completed_at
+    }
+
+    task_runs {
+        uuid id PK
+        uuid task_id FK "references tasks.id"
+        uuid agent_id FK "references agents.id"
+        varchar status "running/completed/failed"
+        jsonb input_data "run input snapshot"
+        jsonb output_data "run output snapshot"
+        text error_message "run failure"
+        integer duration_ms "execution time"
+        integer tokens_used "LLM token count"
+        timestamptz started_at
+        timestamptz completed_at
+    }
+
+    documents {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar title "document name"
+        varchar doc_type "requirements/research/architecture/documentation"
+        text content "JSON/Markdown content"
+        varchar format "json/markdown"
+        integer version "document version"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    diagrams {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar title "diagram name"
+        varchar diagram_type "ERD/architecture/sequence/flowchart"
+        varchar source_format "default: mermaid"
+        text source_content "diagram source code"
+        varchar rendered_path "SVG/PNG path"
+        timestamptz created_at
+    }
+
+    presentations {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar title "presentation name"
+        integer slide_count "number of slides"
+        varchar file_path "PPTX file path"
+        timestamptz created_at
+    }
+
+    approvals {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        varchar action "approval description"
+        text reason "why approval needed"
+        varchar risk_level "low/medium/high"
+        text expected_result "what happens on approval"
+        varchar status "pending/decided"
+        varchar decision "approved/rejected"
+        text decision_notes "user feedback"
+        timestamptz decided_at
+        timestamptz created_at
+    }
+
+    audit_logs {
+        uuid id PK
+        uuid project_id FK "references projects.id"
+        uuid user_id FK "references users.id"
+        varchar action "action performed"
+        varchar entity_type "entity class name"
+        uuid entity_id "affected entity"
+        jsonb details "action metadata"
+        inet ip_address "client IP"
+        timestamptz created_at
+    }

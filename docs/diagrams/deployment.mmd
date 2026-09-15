@@ -1,0 +1,86 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4F46E5'}}}%%
+
+graph TB
+    subgraph Users ["User Access"]
+        Browser["<b>Web Browser</b><br/>Chrome / Firefox / Safari<br/>https://virtualdevstudio.com"]
+        MobileDevice["<b>Mobile Device</b><br/>Flutter App<br/>Android / iOS"]
+    end
+
+    subgraph DockerCompose ["Docker Compose Stack"]
+        direction TB
+
+        subgraph Network ["virtualdev-network (bridge)"]
+            direction LR
+
+            subgraph NginxContainer ["nginx:alpine Container"]
+                Nginx["<b>Nginx Reverse Proxy</b><br/>:443 (HTTPS) → :80<br/>SSL Termination<br/>Static file serving<br/>Rate limiting"]
+            end
+
+            subgraph BackendContainer ["virtualdev-backend Container"]
+                direction TB
+                Uvicorn["<b>Uvicorn ASGI Server</b><br/>Workers: 4<br/>Host: 0.0.0.0:8000<br/>Reload: false (prod)"]
+                FastAPIApp["<b>FastAPI Application</b><br/>CORS configured<br/>API prefix: /api/v1"]
+                WebSocketHandler["<b>WebSocket Handler</b><br/>Path: /ws/projects/:id<br/>Connection manager"]
+            end
+
+            subgraph FrontendContainer ["virtualdev-frontend Container"]
+                StaticFiles["<b>Nginx (static)</b><br/>Built React SPA<br/>Served from /usr/share/nginx/html<br/>Gzip compression"]
+            end
+
+            subgraph PostgreSQLContainer ["postgres:16-alpine Container"]
+                PGServer["<b>PostgreSQL 16</b><br/>Port: 5432<br/>Database: virtualdev_studio<br/>Async driver: asyncpg"]
+                PGVolume[("<b>pgdata Volume</b><br/>Persistent storage<br/>Backup mount point")]
+            end
+
+            subgraph RedisContainer ["redis:7-alpine Container"]
+                RedisServer["<b>Redis 7</b><br/>Port: 6379<br/>Session cache<br/>Token blacklist"]
+            end
+        end
+    end
+
+    subgraph HostMachine ["Host Machine"]
+        EnvFile[".env<br/>SECRET_KEY<br/>DATABASE_URL<br/>LLM_API_KEY<br/>CORS_ORIGINS"]
+        DockerComposeFile["docker-compose.yml"]
+        BackupDir[("/backups/<br/>Daily PG dumps<br/>Retention: 30 days")]
+        LogDir[("/var/log/<br/>Application logs<br/>Nginx access logs")]
+    end
+
+    subgraph ExternalServices ["External Services"]
+        OpenAIAPI["<b>OpenAI API</b><br/>api.openai.com<br/>GPT-4 Model"]
+        AnthropicAPI["<b>Anthropic API</b><br/>api.anthropic.com<br/>Claude Model"]
+        Sentry["<b>Sentry</b><br/>Error tracking<br/>Performance monitoring"]
+    end
+
+    Browser -->|"HTTPS :443"| Nginx
+    MobileDevice -->|"HTTPS :443"| Nginx
+
+    Nginx -->|"Proxy /api/*<br/>HTTP :8000"| Uvicorn
+    Nginx -->|"Proxy /ws/*<br/>WebSocket Upgrade"| WebSocketHandler
+    Nginx -->|"Static /<br/>HTTP :3000"| StaticFiles
+
+    FastAPIApp --> PGServer
+    FastAPIApp --> RedisServer
+    WebSocketHandler --> PGServer
+
+    Uvicorn -->|"Reads"| EnvFile
+    DockerComposeFile -->|"Defines"| DockerCompose
+    PGServer -.->|"Writes"| PGVolume
+    PGVolume -.->|"Daily dumps"| BackupDir
+
+    FastAPIApp -.->|"Optional"| OpenAIAPI
+    FastAPIApp -.->|"Optional"| AnthropicAPI
+    FastAPIApp -.->|"Optional"| Sentry
+
+    Nginx -.->|"Logs"| LogDir
+
+    classDef userDevice fill:#3B82F6,stroke:#1D4ED8,color:#fff,stroke-width:2px
+    classDef container fill:#7C3AED,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef database fill:#059669,stroke:#047857,color:#fff,stroke-width:2px
+    classDef external fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+    classDef infra fill:#F59E0B,stroke:#D97706,color:#000,stroke-width:1px
+
+    class Browser,MobileDevice userDevice
+    class Nginx,Uvicorn,FastAPIApp,WebSocketHandler,StaticFiles,RedisServer container
+    class PGServer,PGVolume database
+    class OpenAIAPI,AnthropicAPI,Sentry external
+    class EnvFile,DockerComposeFile,BackupDir,LogDir infra
