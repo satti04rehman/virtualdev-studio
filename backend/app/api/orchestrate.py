@@ -59,19 +59,17 @@ async def continue_orchestration(
             ProjectStage.status.in_(["pending", "in_progress", "failed", "waiting_approval"]),
         ).order_by(ProjectStage.stage_name)
     )
-    next_stage = stage_result.scalar_one_or_none()
-    if not next_stage:
-        await db.refresh(project)
-        return {"status": "continued", "project_id": str(project_id), "current_stage": project.current_stage}
+    next_stages = stage_result.scalars().all()
 
-    stage_def = next(
-        (s for s in WORKFLOW_STAGES if s[0] == next_stage.stage_name), None
-    )
-    agent_role = stage_def[1] if stage_def else None
-    if agent_role:
-        await orchestrator._execute_stage(
-            next_stage.stage_name, agent_role, f"Continue {next_stage.stage_name}"
+    for next_stage in next_stages:
+        stage_def = next(
+            (s for s in WORKFLOW_STAGES if s[0] == next_stage.stage_name), None
         )
+        agent_role = stage_def[1] if stage_def else None
+        if agent_role:
+            await orchestrator._execute_stage(
+                next_stage.stage_name, agent_role, f"Continue {next_stage.stage_name}"
+            )
 
     await db.refresh(project)
     return {"status": "continued", "project_id": str(project_id), "current_stage": project.current_stage}
