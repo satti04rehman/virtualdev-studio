@@ -1,8 +1,10 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from uuid import UUID
-from app.core.security import get_current_user
-from app.models.user import User
+from sqlalchemy import select
+from app.core.security import authenticate_token
+from app.core.database import get_db
+from app.models.models import Project
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -37,6 +39,32 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/projects/{project_id}")
 async def project_websocket(websocket: WebSocket, project_id: str):
+    # Auth runs before accept(): the handshake isn't complete until we accept,
+    # so unauthenticated/unauthorized clients are rejected with 4401 and never
+    # receive a single project event.
+    try:
+        project_uuid = UUID(project_id)
+        header = websocket.headers.get("authorization", "")
+        token = (
+            header.split(" ", 1)[1]
+            if header.lower().startswith("bearer ")
+            else websocket.query_params.get("token")
+        )
+        if not token:
+            raise ValueError("missing token")
+        async with get_db() as db:
+            user = await authenticate_token(token, db)
+            result = await db.execute(
+                select(Project).where(
+                    Project.id == project_uuid, Project.owner_id == user.id
+                )
+            )
+            if result.scalar_one_or_none() is None:
+                raise ValueError("not the project owner")
+    except Exception:
+        await websocket.close(code=4401)
+        return
+
     await manager.connect(websocket, project_id)
     try:
         while True:
