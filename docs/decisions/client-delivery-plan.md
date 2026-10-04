@@ -156,7 +156,7 @@ Explicitly **not** part of this delivery (beyond MVP by design — `scope-constr
 
 - **System:** VirtualDev Studio — AI-powered virtual software development studio (MVP).
 - **Version:** v1.0.0 (tag at close-out).
-- **Repository:** `/home/abdulrehman/virtualdev-studio/` (backend, frontend, docs, scripts).
+- **Repository:** `~/Projects/virtualdev-studio/` (backend, frontend, docs, scripts).
 - **Production URL:** _[to be filled at deployment]_
 - **Architecture:** modular monolith — React + TypeScript frontend (Vite), Python/FastAPI backend, PostgreSQL, WebSocket real-time, Docker Compose. See `docs/architecture/high-level-architecture.md`.
 

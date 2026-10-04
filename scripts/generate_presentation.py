@@ -282,5 +282,7 @@ add_text(slide, 1.2, 3.0, 11, 1.0, "Thank You", 40, WHITE, bold=True, align=PP_A
 add_text(slide, 1.2, 4.0, 11, 0.6, "Questions & Discussion", 22, ACCENT, align=PP_ALIGN.CENTER)
 add_text(slide, 1.2, 5.0, 11, 0.4, "VirtualDev Studio — Idea to Production, Orchestrated", 14, GREY, align=PP_ALIGN.CENTER)
 
-prs.save("/home/abdulrehman/virtualdev-studio/docs/presentation/VirtualDev-Studio-Presentation.pptx")
+from pathlib import Path
+
+prs.save(Path(__file__).resolve().parent.parent / "docs/presentation/VirtualDev-Studio-Presentation.pptx")
 print(f"Presentation saved: {len(prs.slides)} slides")

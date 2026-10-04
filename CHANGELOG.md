@@ -5,6 +5,13 @@ All notable changes to VirtualDev Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Final validation audit (`docs/FINAL-VALIDATION.md`).
+- Skill utilization report (`docs/SKILL-UTILIZATION-REPORT.md`).
+- Skill system audit (`docs/SKILL-SYSTEM-AUDIT.md`).
+
 ## [0.1.0] - 2026-09-15
 
 ### Initial MVP
